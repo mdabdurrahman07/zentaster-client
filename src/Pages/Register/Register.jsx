@@ -1,8 +1,55 @@
 import { useForm } from "react-hook-form";
 import './register.css'
+import toast from "react-hot-toast";
+import UseAuth from "../../Hooks/UseAuth"
+import { updateProfile } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
 const Register = () => {
-    const { register, handleSubmit } = useForm()
-  const onSubmit = (data) => {console.log(data)}
+    const { register, handleSubmit, reset } = useForm()
+    const {createUser} = UseAuth()
+    const navigate = useNavigate()
+  const onSubmit = (data) => {console.log(data)
+        const name = data?.name
+        const email = data?.email
+        const img = data?.img
+        const password = data?.pass
+
+        if(password.length < 6){
+            toast.error("The Password Must be at least 6 Characters")
+            return
+          }
+          else if(!/[!@#$%^&*()_+{}]/.test(password)){
+                   toast.error("The Password Must Contain One Special Characters")
+                    return
+          }
+          else if(!/^(?=.*[A-Z]).*$/.test(password)){
+                toast.error("The Password Must Contain One Capital Letter")
+                return
+          }
+
+          createUser(email , password)
+          .then(res =>{
+            console.log(res)
+            if(res){
+                updateProfile(res.user, {
+                    displayName: name , 
+                    photoURL: img
+                })
+                .then(() =>{
+                  
+                    toast.success('User Created Successfully')
+                    reset()
+                    navigate('/dashboard')
+                })
+                .catch(error =>{
+                    toast.error(error)
+                })
+            }
+          })
+          .catch(error =>{
+            toast.error(error)
+          })
+        }
     return (
         <div className="register">
             <section className='my-40  w-[380px] mx-auto rounded-md'>
